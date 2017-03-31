@@ -17,6 +17,7 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.method.ArrowKeyMovementMethod;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -386,13 +387,6 @@ public class TagGroup extends ViewGroup {
     }
 
     /**
-     * @see #setTags(String...)
-     */
-    public void setTags(List<String> tagList) {
-        setTags(tagList.toArray(new String[tagList.size()]));
-    }
-
-    /**
      * Set the tags. It will remove all previous tags first.
      *
      * @param tags the tag list to set.
@@ -406,6 +400,13 @@ public class TagGroup extends ViewGroup {
         if (isAppendMode) {
             appendInputTag();
         }
+    }
+
+    /**
+     * @see #setTags(String...)
+     */
+    public void setTags(List<String> tagList) {
+        setTags(tagList.toArray(new String[tagList.size()]));
     }
 
     /**
@@ -709,6 +710,8 @@ public class TagGroup extends ViewGroup {
 
         public TagView(Context context, final int state, CharSequence text) {
             super(context);
+            //   setSingleLine();
+            //   setMaxLines(1);
             setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding);
             setLayoutParams(new TagGroup.LayoutParams(
                     TagGroup.LayoutParams.WRAP_CONTENT,
@@ -733,7 +736,14 @@ public class TagGroup extends ViewGroup {
                     return state != STATE_INPUT;
                 }
             });
+            setOnKeyListener(new OnKeyListener() {
+                @Override
+                public boolean onKey(View v, int keyCode, KeyEvent event) {
 
+                    Log.e("TAG", "setOnKeyListener " + (event == null ? "null" : event.getKeyCode()));
+                    return false;
+                }
+            });
             if (state == STATE_INPUT) {
                 requestFocus();
 
@@ -741,9 +751,12 @@ public class TagGroup extends ViewGroup {
                 setOnEditorActionListener(new OnEditorActionListener() {
                     @Override
                     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                        if (event != null)
+                            Log.e("TAG", "setOnEditorActionListener " + event.getKeyCode())
+                                    ;
                         if (actionId == EditorInfo.IME_NULL
-                                && (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER
-                                && event.getAction() == KeyEvent.ACTION_DOWN)) {
+                                && event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER
+                                && event.getAction() == KeyEvent.ACTION_DOWN) {
                             if (isInputAvailable()) {
                                 // If the input content is available, end the input and dispatch
                                 // the event, then append a new INPUT state tag.
@@ -787,9 +800,7 @@ public class TagGroup extends ViewGroup {
                         return false;
                     }
                 });
-
-                // Handle the INPUT tag content changed.
-                addTextChangedListener(new TextWatcher() {
+                TextWatcher watcher12 = new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
                         // When the INPUT state tag changed, uncheck the checked tag if exists.
@@ -805,8 +816,18 @@ public class TagGroup extends ViewGroup {
 
                     @Override
                     public void afterTextChanged(Editable s) {
+                        if (getLineCount() > 1) {
+                            // removeTextChangedListener(finalWatcher1);
+                            String text = getText().toString();
+                            setText(text.substring(0, text.length() - 1));
+                            submitTag();
+                            //  addTextChangedListener(finalWatcher1);
+                        }
                     }
-                });
+                };
+                final TextWatcher finalWatcher1 = watcher12;
+                // Handle the INPUT tag content changed.
+                addTextChangedListener(finalWatcher1);
             }
 
             invalidatePaint();
