@@ -4,8 +4,8 @@ android {
     compileSdkVersion 25
     buildToolsVersion '25.0.2'
     defaultConfig {
-        applicationId 'me.gujun.android.taggroup.demo'
-        minSdkVersion 11
+        applicationId 'in.habel.taggroup.demo'
+        minSdkVersion 16
         targetSdkVersion 25
         versionName project.VERSION_NAME
         versionCode Integer.parseInt(project.VERSION_CODE)
